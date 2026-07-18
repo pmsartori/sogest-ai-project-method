@@ -42,3 +42,125 @@ resolver.
    `/plugin marketplace add thedotmack` + `/plugin install claude-mem`.
 
 Só avance para a Fase 1 depois que as 5 checagens passarem.
+
+## Fase 1 — Perguntas
+
+Pergunte uma de cada vez.
+
+1. **Tipo de projeto:** Software ou Metodologia e Gestão? (Metodologia e
+   Gestão está fora do escopo desta versão da skill — se escolhido, avise
+   que ainda não está implementado e pare.)
+2. **Nome do projeto** (vira o slug do repo, kebab-case) + descrição de
+   uma linha.
+3. **Privado ou público?** (recomendação padrão: público, para tipo
+   Software.)
+4. **Módulos do projeto** — lista livre, ex: "Tenancy, Reporting, Import".
+   Cada um vira uma label `area:<slug>` + 1 epic.
+5. **Modelo de deploy:** SSH próprio / Vercel-Netlify / Nenhum (manual).
+   - Se SSH: pergunte host, usuário, caminho remoto. As credenciais reais
+     (chave SSH) ficam como próximo passo manual — nunca peça a chave em
+     texto no chat.
+6. **Cadência de sprint** (ex.: 2 semanas) → define a data de vencimento
+   do milestone "Sprint 1" (hoje + N dias).
+
+Confirme um resumo das respostas antes de prosseguir para a Fase 2.
+
+## Fase 2 — Automação
+
+Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
+
+1. **Criar o repositório a partir do template:**
+   ```bash
+   gh repo create pmsartori/<slug> --template pmsartori/sogest-project-template --public   # ou --private
+   git clone https://github.com/pmsartori/<slug>.git
+   cd <slug>
+   ```
+
+2. **Substituir os placeholders** em `README.md`, `AGENTS.md`,
+   `CONTRIBUTING.md`, `docs/PROJECT.md`, `.github/ISSUE_TEMPLATE/config.yml`,
+   `scripts/overview.sh`, `scripts/setup-board.sh`:
+   - `[PROJETO]` → nome do projeto
+   - `[DESCRICAO_UMA_LINHA]` → descrição
+   - `[SLUG_PROJETO]` → slug do repo
+   - `[LISTA_MODULOS_COM_EPICS]` e `[TABELA_MODULOS_EPICS]` → lista/tabela
+     dos módulos informados (preencha o número do epic depois do Step 5)
+   - `[TABELA_AMBIENTES]` → copie a tabela de ambientes do
+     `variants/<modelo>/DEPLOYMENT.md` escolhido
+
+3. **Aplicar o modelo de deploy escolhido** (consulte
+   `references/deploy-<modelo>.md` para o passo a passo exato):
+   ```bash
+   cp variants/<modelo>/DEPLOYMENT.md docs/DEPLOYMENT.md
+   mkdir -p .github/workflows
+   cp variants/<modelo>/workflows/*.yml .github/workflows/ 2>/dev/null || true
+   rm -rf variants
+   ```
+
+4. **Commit e push em `main`** (antes de criar `develop`/`test`, para que
+   as duas nasçam já com o conteúdo preenchido, não com os placeholders
+   crus do template):
+   ```bash
+   git add -A
+   git commit -m "chore: fill onboarding placeholders"
+   git push
+   ```
+
+5. **Criar `develop` e `test` a partir de `main`, e proteger `main`:**
+   ```bash
+   git checkout -b develop
+   git push -u origin develop
+   git checkout -b test
+   git push -u origin test
+   git checkout main
+   gh api -X PUT repos/pmsartori/<slug>/branches/main/protection \
+     -f required_status_checks='null' \
+     -F enforce_admins=false \
+     -f required_pull_request_reviews='{"required_approving_review_count":1}' \
+     -f restrictions='null'
+   git checkout develop
+   ```
+   Se o repositório for privado num plano GitHub Free, a API de branch
+   protection pode retornar 403 (recurso de plano pago) — nesse caso,
+   avise o usuário e trate como próximo passo manual em vez de falhar o
+   fluxo inteiro. Termine este passo na branch `develop` — é onde o
+   trabalho subsequente acontece.
+
+6. **Criar as labels:**
+   ```bash
+   gh label create epic --color 5319e7 --description "Large multi-issue workstream"
+   gh label create "status:ready" --color 5319E7
+   gh label create "status:in-progress" --color 1D76DB
+   gh label create "status:in-review" --color 0E8A16
+   gh label create "status:blocked" --color B60205
+   gh label create needs-triage --color FBCA04
+   gh label create accepted --color 0E8A16
+   gh label create suggestion --color C5DEF5
+   gh label create "good first issue" --color 7057ff
+   gh label create tech-debt --color d4c5f9
+   gh label create security --color b60205
+   # uma label area:<slug> por módulo informado na Fase 1
+   for m in "${MODULOS[@]}"; do gh label create "area:$m" --color 1D76DB; done
+   ```
+
+7. **Criar 1 epic por módulo:**
+   ```bash
+   for m in "${MODULOS[@]}"; do
+     gh issue create --title "[EPIC] $m" --label "epic,area:$m"
+   done
+   ```
+
+8. **Criar o milestone da Sprint 1:**
+   ```bash
+   gh api repos/pmsartori/<slug>/milestones -f title="Sprint 1" -f due_on="<hoje+N_dias>T00:00:00Z"
+   ```
+
+9. **Criar o board:**
+   ```bash
+   OWNER=pmsartori REPO=pmsartori/<slug> TITLE="<Projeto> Roadmap" bash scripts/setup-board.sh
+   ```
+
+10. **Resumo final** — imprima para o usuário: link do repo, link do
+    board, link dos milestones, e a lista de próximos passos manuais (ex.:
+    "configure os secrets SSH_HOST/SSH_USER/SSH_KEY/DEPLOY_PATH antes do
+    primeiro deploy" se o modelo escolhido foi SSH; branch protection
+    manual se a API retornou 403).
