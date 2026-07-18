@@ -1,0 +1,13 @@
+{
+  "name": "sogest-ai-project-method",
+  "description": "Instala a estrutura de gestão de projetos da Sogest (labels, board, ADRs, método) num repositório GitHub novo, a partir de um onboarding interativo",
+  "version": "0.1.0",
+  "author": {
+    "name": "Pedro Mondardo Sartori",
+    "email": "psartori@sogest.com.br"
+  },
+  "homepage": "https://github.com/pmsartori/sogest-ai-project-method",
+  "repository": "https://github.com/pmsartori/sogest-ai-project-method",
+  "license": "MIT",
+  "keywords": ["project-management", "github", "onboarding", "sogest"]
+}
