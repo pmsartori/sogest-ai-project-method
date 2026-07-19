@@ -56,11 +56,17 @@ Pergunte uma de cada vez.
    Software.)
 4. **Módulos do projeto** — lista livre, ex: "Tenancy, Reporting, Import".
    Cada um vira uma label `area:<slug>` + 1 epic.
-5. **Modelo de deploy:** SSH próprio / Vercel-Netlify / Nenhum (manual).
+5. **Este projeto precisa de serviços locais** (banco de dados, cache)?
+   (sim/não)
+   - Se sim: antes de prosseguir, rode `docker info`. Se falhar, instrua a
+     instalar/abrir o Docker Desktop e **pare** — mesma disciplina das
+     checagens de pré-voo (nunca prossiga com uma dependência ausente sem
+     avisar).
+6. **Modelo de deploy:** SSH próprio / Vercel-Netlify / Nenhum (manual).
    - Se SSH: pergunte host, usuário, caminho remoto. As credenciais reais
      (chave SSH) ficam como próximo passo manual — nunca peça a chave em
      texto no chat.
-6. **Cadência de sprint** (ex.: 2 semanas) → define a data de vencimento
+7. **Cadência de sprint** (ex.: 2 semanas) → define a data de vencimento
    do milestone "Sprint 1" (hoje + N dias).
 
 Confirme um resumo das respostas antes de prosseguir para a Fase 2.
@@ -100,7 +106,20 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    rm -rf variants
    ```
 
-4. **Commit e push em `main`** (antes de criar `develop`/`test`, para que
+4. **Se a resposta da Fase 1 foi "sim" para serviços locais**, aplicar o
+   scaffold de Docker:
+   ```bash
+   cp optional/docker-compose.yml docker-compose.yml
+   sed -i "s/\[SLUG_PROJETO\]/<slug>/g" docker-compose.yml
+   cat optional/CONTRIBUTING-local-services-snippet.md >> CONTRIBUTING.md
+   ```
+   **Em qualquer caso** (sim ou não), remova a pasta descartável antes do
+   commit:
+   ```bash
+   rm -rf optional
+   ```
+
+5. **Commit e push em `main`** (antes de criar `develop`/`test`, para que
    as duas nasçam já com o conteúdo preenchido, não com os placeholders
    crus do template):
    ```bash
@@ -109,7 +128,7 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    git push
    ```
 
-5. **Criar `develop` e `test` a partir de `main`, e proteger `main`:**
+6. **Criar `develop` e `test` a partir de `main`, e proteger `main`:**
    ```bash
    git checkout -b develop
    git push -u origin develop
@@ -133,7 +152,7 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    fluxo inteiro. Termine este passo na branch `develop` — é onde o
    trabalho subsequente acontece.
 
-6. **Criar as labels:**
+7. **Criar as labels:**
    ```bash
    gh label create epic --color 5319e7 --description "Large multi-issue workstream"
    gh label create "status:ready" --color 5319E7
@@ -150,25 +169,26 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    for m in "${MODULOS[@]}"; do gh label create "area:$m" --color 1D76DB; done
    ```
 
-7. **Criar 1 epic por módulo:**
+8. **Criar 1 epic por módulo:**
    ```bash
    for m in "${MODULOS[@]}"; do
      gh issue create --title "[EPIC] $m" --label "epic,area:$m" --body "Epic do módulo $m."
    done
    ```
 
-8. **Criar o milestone da Sprint 1:**
+9. **Criar o milestone da Sprint 1:**
    ```bash
    gh api repos/pmsartori/<slug>/milestones -f title="Sprint 1" -f due_on="<hoje+N_dias>T00:00:00Z"
    ```
 
-9. **Criar o board:**
+10. **Criar o board:**
    ```bash
    OWNER=pmsartori REPO=pmsartori/<slug> TITLE="<Projeto> Roadmap" bash scripts/setup-board.sh
    ```
 
-10. **Resumo final** — imprima para o usuário: link do repo, link do
+11. **Resumo final** — imprima para o usuário: link do repo, link do
     board, link dos milestones, e a lista de próximos passos manuais (ex.:
     "configure os secrets SSH_HOST/SSH_USER/SSH_KEY/DEPLOY_PATH antes do
     primeiro deploy" se o modelo escolhido foi SSH; branch protection
-    manual se a API retornou 403).
+    manual se a API retornou 403; se o projeto usa serviços locais, rode
+    `docker compose up -d` antes de começar a desenvolver).
