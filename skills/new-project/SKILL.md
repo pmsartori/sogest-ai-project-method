@@ -47,22 +47,25 @@ Só avance para a Fase 1 depois que as 5 checagens passarem.
 
 Pergunte uma de cada vez.
 
-1. **Tipo de projeto:** Software ou Metodologia e Gestão? (Metodologia e
-   Gestão está fora do escopo desta versão da skill — se escolhido, avise
-   que ainda não está implementado e pare.)
+1. **Tipo de projeto:** Software ou Metodologia e Gestão? A resposta
+   define qual template usar (`sogest-project-template` ou
+   `sogest-methodology-template`) e quais perguntas seguintes se aplicam —
+   itens marcados "(Software)" abaixo só são perguntados se este tipo foi
+   escolhido.
 2. **Nome do projeto** (vira o slug do repo, kebab-case) + descrição de
    uma linha.
-3. **Privado ou público?** (recomendação padrão: público, para tipo
-   Software.)
+3. **Privado ou público?** (recomendação padrão: **público** para tipo
+   Software; **privado** para tipo Metodologia e Gestão — esses projetos
+   costumam conter informação sensível de cliente.)
 4. **Módulos do projeto** — lista livre, ex: "Tenancy, Reporting, Import".
    Cada um vira uma label `area:<slug>` + 1 epic.
-5. **Este projeto precisa de serviços locais** (banco de dados, cache)?
+5. **(Software) Este projeto precisa de serviços locais** (banco de dados, cache)?
    (sim/não)
    - Se sim: antes de prosseguir, rode `docker info`. Se falhar, instrua a
      instalar/abrir o Docker Desktop e **pare** — mesma disciplina das
      checagens de pré-voo (nunca prossiga com uma dependência ausente sem
      avisar).
-6. **Modelo de deploy:** SSH próprio / Vercel-Netlify / Nenhum (manual).
+6. **(Software) Modelo de deploy:** SSH próprio / Vercel-Netlify / Nenhum (manual).
    - Se SSH: pergunte host, usuário, caminho remoto. As credenciais reais
      (chave SSH) ficam como próximo passo manual — nunca peça a chave em
      texto no chat.
