@@ -78,9 +78,13 @@ Confirme um resumo das respostas antes de prosseguir para a Fase 2.
 
 Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
 
-1. **Criar o repositório a partir do template:**
+1. **Criar o repositório a partir do template certo** (depende do tipo
+   escolhido na Fase 1 — Software usa `sogest-project-template`,
+   Metodologia e Gestão usa `sogest-methodology-template`):
    ```bash
-   gh repo create pmsartori/<slug> --template pmsartori/sogest-project-template --public   # ou --private
+   TEMPLATE=pmsartori/sogest-project-template        # se tipo = Software
+   TEMPLATE=pmsartori/sogest-methodology-template     # se tipo = Metodologia e Gestão
+   gh repo create pmsartori/<slug> --template "$TEMPLATE" --public   # ou --private
    for i in $(seq 1 10); do
      gh api repos/pmsartori/<slug>/contents/AGENTS.md >/dev/null 2>&1 && break
      sleep 2
@@ -100,7 +104,10 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    - `[TABELA_AMBIENTES]` → copie a tabela de ambientes do
      `variants/<modelo>/DEPLOYMENT.md` escolhido
 
-3. **Aplicar o modelo de deploy escolhido** (consulte
+   **(Metodologia e Gestão)** este tipo não tem o placeholder
+   `[TABELA_AMBIENTES]` em nenhum arquivo — pule esse item da lista.
+
+3. **(Software) Aplicar o modelo de deploy escolhido** (consulte
    `references/deploy-<modelo>.md` para o passo a passo exato):
    ```bash
    cp variants/<modelo>/DEPLOYMENT.md docs/DEPLOYMENT.md
@@ -109,8 +116,8 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    rm -rf variants
    ```
 
-4. **Se a resposta da Fase 1 foi "sim" para serviços locais**, aplicar o
-   scaffold de Docker:
+4. **(Software) Se a resposta da Fase 1 foi "sim" para serviços
+   locais**, aplicar o scaffold de Docker:
    ```bash
    cp optional/docker-compose.yml docker-compose.yml
    sed -i "s/\[SLUG_PROJETO\]/<slug>/g" docker-compose.yml
@@ -131,13 +138,18 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    git push
    ```
 
-6. **Criar `develop` e `test` a partir de `main`, e proteger `main`:**
+6. **Proteger `main`** (e, **apenas para tipo Software**, criar `develop`
+   e `test` a partir dela primeiro — Metodologia e Gestão não tem pipeline
+   de deploy, protege só `main`):
    ```bash
+   # (Software) pule este bloco develop/test se o tipo for Metodologia e Gestão
    git checkout -b develop
    git push -u origin develop
    git checkout -b test
    git push -u origin test
    git checkout main
+   ```
+   ```bash
    cat > /tmp/branch-protection.json <<'JSON'
    {
      "required_status_checks": null,
@@ -152,8 +164,9 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    Se o repositório for privado num plano GitHub Free, a API de branch
    protection pode retornar 403 (recurso de plano pago) — nesse caso,
    avise o usuário e trate como próximo passo manual em vez de falhar o
-   fluxo inteiro. Termine este passo na branch `develop` — é onde o
-   trabalho subsequente acontece.
+   fluxo inteiro. **(Software)** termine este passo na branch `develop`.
+   **(Metodologia e Gestão)** termine na própria `main`, já que não existe
+   `develop` neste tipo.
 
 7. **Criar as labels:**
    ```bash
@@ -194,4 +207,6 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
     "configure os secrets SSH_HOST/SSH_USER/SSH_KEY/DEPLOY_PATH antes do
     primeiro deploy" se o modelo escolhido foi SSH; branch protection
     manual se a API retornou 403; se o projeto usa serviços locais, rode
-    `docker compose up -d` antes de começar a desenvolver).
+    `docker compose up -d` antes de começar a desenvolver). **(Metodologia
+    e Gestão)** para exportar um documento em Word no padrão Sogest, rode
+    `node scripts/export-docx.js <arquivo.md>`.
