@@ -159,14 +159,16 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    }
    JSON
    gh api -X PUT repos/pmsartori/<slug>/branches/main/protection --input /tmp/branch-protection.json
-   git checkout develop
+   # (Software) git checkout develop — (Metodologia e Gestão) não execute
+   # este checkout, permaneça em main, pois develop não existe neste tipo
    ```
    Se o repositório for privado num plano GitHub Free, a API de branch
    protection pode retornar 403 (recurso de plano pago) — nesse caso,
    avise o usuário e trate como próximo passo manual em vez de falhar o
-   fluxo inteiro. **(Software)** termine este passo na branch `develop`.
-   **(Metodologia e Gestão)** termine na própria `main`, já que não existe
-   `develop` neste tipo.
+   fluxo inteiro. **(Software)** termine este passo na branch `develop`
+   (rode o `git checkout develop` comentado acima). **(Metodologia e
+   Gestão)** termine na própria `main`, já que não existe `develop` neste
+   tipo — não rode o `git checkout develop`.
 
 7. **Criar as labels:**
    ```bash
