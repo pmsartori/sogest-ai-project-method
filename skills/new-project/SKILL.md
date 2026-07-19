@@ -72,6 +72,10 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
 1. **Criar o repositório a partir do template:**
    ```bash
    gh repo create pmsartori/<slug> --template pmsartori/sogest-project-template --public   # ou --private
+   for i in $(seq 1 10); do
+     gh api repos/pmsartori/<slug>/contents/AGENTS.md >/dev/null 2>&1 && break
+     sleep 2
+   done
    git clone https://github.com/pmsartori/<slug>.git
    cd <slug>
    ```
@@ -112,11 +116,15 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
    git checkout -b test
    git push -u origin test
    git checkout main
-   gh api -X PUT repos/pmsartori/<slug>/branches/main/protection \
-     -f required_status_checks='null' \
-     -F enforce_admins=false \
-     -f required_pull_request_reviews='{"required_approving_review_count":1}' \
-     -f restrictions='null'
+   cat > /tmp/branch-protection.json <<'JSON'
+   {
+     "required_status_checks": null,
+     "enforce_admins": false,
+     "required_pull_request_reviews": {"required_approving_review_count": 1},
+     "restrictions": null
+   }
+   JSON
+   gh api -X PUT repos/pmsartori/<slug>/branches/main/protection --input /tmp/branch-protection.json
    git checkout develop
    ```
    Se o repositório for privado num plano GitHub Free, a API de branch
@@ -145,7 +153,7 @@ Execute nesta ordem exata. Pare e reporte se qualquer comando falhar.
 7. **Criar 1 epic por módulo:**
    ```bash
    for m in "${MODULOS[@]}"; do
-     gh issue create --title "[EPIC] $m" --label "epic,area:$m"
+     gh issue create --title "[EPIC] $m" --label "epic,area:$m" --body "Epic do módulo $m."
    done
    ```
 
